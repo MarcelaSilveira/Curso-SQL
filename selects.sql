@@ -83,4 +83,78 @@ where id IN (
 	from alunos a 
 	inner join notas n on a.id= n.alunoid;
 
+	--- Consultas combinadas ( exists , Union)
+ --- Mostrar apenas os alunos que tem pagamentos registrados
+
+ SELECT nome
+ from Alunos a
+ where EXISTS (
+ select 1 from pagamentos p where p.Alunoid = a.id
+ );
+
+ --- combinar alunos e professores em uma mesma lista ( UNION= JUNTAR DUAS TABELAS EM UMA UNICA) 
+ SELECT nome, 'aluno' as tipo
+ from Alunos 
+ UNION
+ select nome, 'professor'as tipo
+ from professores 
+
+ -- Extra- receita final
+ ---Alunos com suas ultimas notas
+
+select a.nome, c.Nomecurso, n.nota, n.DataAvaliacao
+from Alunos a
+inner join notas n on a.id = n.Alunoid
+inner join cursos c on c.id = n.CursoID
+where n.DataAvaliacao =(
+select max(DataAvaliacao)
+from notas n2
+where n2.Alunoid = a.id
+);
+
+-- ranking de alunos pelas notas 
+--(usaremos uma função de janela)
+select a.nome, c.nomecurso, n.nota,
+rank () over (order by n.nota desc) as ranking
+from notas n
+join alunos a on n.Alunoid = a.id
+join Cursos c on n.CursoID = c.id
+
+--multiplos calculos- 
+---função Cast = Usar a nota em decimal
+---Min= Menor nota
+---Max= maior nota
+select 
+a.nome As Aluno,
+avg (cast (n.nota as decimal(10,2))) as 'media de notas',
+Min(n.nota) as 'Menor nota',
+max(n.nota) as 'Maior nota',
+Count (*) as 'qts notas'
+from alunos a
+inner join notas n on n.alunoid =  a.id
+group by a.nome
+
+---contar quantas avaliações há por situação
+select 
+case 
+when n.nota >=7 then 'aprovado'
+when n.nota >=5 then 'recuperacao'
+else 'reprovado'
+end as situacao, 
+count (*) as quantidade
+from alunos a
+inner join notas n on a.id =n.Alunoid
+group by
+case 
+when n.nota >=7 then 'aprovado'
+when n.nota >=5 then 'recuperacao'
+else 'reprovado'
+end 
+order by quantidade desc;
+
+-- quero alunos com email do gmail
+select a.nome, a.email
+from alunos a 
+where Email like '%@gmail.com';
+
 
